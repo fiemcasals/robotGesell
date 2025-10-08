@@ -1,4 +1,6 @@
 #include<stdio.h>
+#include <stdlib.h>
+
 
 void presentacion(){
     char nombre[] = "ALEJANDRO GERSTNER";
@@ -12,6 +14,8 @@ void presentacion(){
 
 int main(){
     presentacion();
+     system("pause");
     return(0);
+
 }
 
