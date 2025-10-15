@@ -7,7 +7,7 @@ int main(){
     printf("Ingresar nombre y apellido: ");
 
     //Lee desde la entrada estandar y lo guarda, sizeof asegura el limite de caracrteres.
-    if(fgets(nombre, sizeof(nombre) stdin) != NULL);
+    if(fgets(nombre, sizeof(nombre), stdin) != NULL)
 
     //Eliminar salto de linea
     char *p = strchr(nombre, '\n'); //Busca el salto de linea, el enter.
