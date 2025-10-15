@@ -2,8 +2,8 @@
 
 int main() {
 
-    int entero = 5;
-    float flotante = 5.99;
+    int entero = 5; //1, 54, 89
+    float flotante = 5.99; //1.99, 2.50, 3.75
     char caracter = 'D';
     char cadena[] = "hola";
 
