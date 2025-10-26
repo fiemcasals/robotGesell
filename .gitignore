@@ -1,1 +1,25 @@
-ejerciosProfe
+password
+git init 
+git add .
+
+ejerc1.c
+ejerc2.c
+password
+
+
+crear un archivo llamado ".gitignore" y dentro de este archivo poner los nombres de lo que no queres que suba
+
+password
+
+
+git add .
+
+	-> ejerc1.c
+	->ejerc2.c
+
+git add ejerc1.c
+
+
+git commmit -m "subo primeros dos ejercicios"
+
+git push origin master
