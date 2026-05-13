@@ -1,0 +1,113 @@
+para leer el puerto
+ls /dev/tty* | grep -E "USB|ACM"
+
+
+para flashear el esp
+esptool --port /dev/ttyUSB0 erase_flash
+
+para descargar el bin
+wget https://micropython.org/resources/firmware/ESP8266_GENERIC-20240602-v1.23.0.bin
+
+Grabar el firmware en el ESP8266 <-permite usar micropython en el controlador
+esptool --port /dev/ttyUSB0 --chip esp8266 write-flash --flash_mode dio --flash_size 4MB 0x0 ESP8266_GENERIC-20240602-v1.23.0.bin
+
+
+Subir los archivos al ESP
+# Subir boot.py
+mpremote cp boot.py :
+
+# Subir main.py
+mpremote cp main.py :
+
+
+
+Ejecución final
+mpremote reset
+
+
+Reinicio y Prueba
+Después de confirmar que están ahí, reinicia la placa para que MicroPython cargue el nuevo
+mpremote connect /dev/ttyUSB0 reset
+
+
+Pasos para testear:
+
+En tu celular o notebook, busca la red Wi-Fi "Robotica-ESP".
+
+Conéctate (clave: password123).
+
+Abre el navegador y ve a 192.168.4.1.
+
+¡Dale al botón! El LED azul del módulo debería reaccionar.
+
+
+main.py
+
+import machine
+import usocket as socket # Usamos usocket explícitamente
+
+# Pin 2 para el LED (lógica inversa)
+led = machine.Pin(2, machine.Pin.OUT)
+led.value(1) 
+
+def web_page():
+    html = """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Control Robotica</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <style>
+            body { font-family: Arial; text-align: center; margin-top: 50px; }
+            .btn { background-color: #e74c3c; color: white; padding: 20px 40px; 
+                  font-size: 25px; border-radius: 10px; text-decoration: none; border: none; }
+        </style>
+    </head>
+    <body>
+        <h1>ESP8266 Control</h1>
+        <p><a href="/toggle"><button class="btn">ACCIONAR LED</button></a></p>
+    </body>
+    </html>
+    """
+    return html
+
+# Configuración de socket compatible con ESP8266
+s = socket.socket() # Por defecto es AF_INET y SOCK_STREAM en MicroPython
+s.bind(('', 80))
+s.listen(5)
+
+print("Servidor HTTP activo y esperando...")
+
+while True:
+    try:
+        conn, addr = s.accept()
+        request = conn.recv(1024).decode('utf-8')
+        
+        if '/toggle' in request:
+            led.value(not led.value()) 
+        
+        response = web_page()
+        conn.send('HTTP/1.1 200 OK\nContent-Type: text/html\nConnection: close\n\n')
+        conn.sendall(response)
+        conn.close()
+    except Exception as e:
+        print("Error en conexión:", e)
+        if conn:
+            conn.close()
+
+
+
+
+
+boot.py
+
+
+import network
+import gc
+
+ap = network.WLAN(network.AP_IF)
+ap.active(True)
+ap.config(essid='Robotica-ESP', password='password123')
+
+print('Red AP Activa. IP:', ap.ifconfig()[0])
+gc.collect()

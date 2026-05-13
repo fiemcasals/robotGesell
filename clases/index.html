@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clase: MicroPython & ESP8266 | Domótica UTN</title>
+    <meta name="description" content="Guía completa para flashear y configurar un ESP8266 con MicroPython para control de LEDs vía Web Server.">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="animate">
+            <img src="hero.png" alt="ESP8266 NodeMCU" class="hero-image">
+            <h1>MicroPython & ESP8266</h1>
+            <p class="subtitle">Aprendé a controlar el mundo físico desde tu navegador. Guía paso a paso para domótica básica.</p>
+        </header>
+
+        <section class="animate" style="animation-delay: 0.1s;">
+            <h2>1. Preparación del Entorno</h2>
+            <p>Antes de comenzar, debemos identificar en qué puerto está conectada nuestra placa y borrar cualquier configuración previa.</p>
+            <div class="code-header">Identificar Puerto (Linux)</div>
+            <pre><code><span class="command">ls /dev/tty* | grep -E "USB|ACM"</span></code></pre>
+            <div class="code-header">Limpiar Memoria Flash</div>
+            <pre><code><span class="command">esptool --port /dev/ttyUSB0 erase_flash</span></code></pre>
+        </section>
+
+        <section class="animate" style="animation-delay: 0.2s;">
+            <h2>2. Instalación del Firmware</h2>
+            <p>Descargamos la última versión estable de MicroPython para el ESP8266 y la grabamos en el controlador.</p>
+            <pre><code><span class="comment"># Descargar firmware</span>
+<span class="command">wget https://micropython.org/resources/firmware/ESP8266_GENERIC-20240602-v1.23.0.bin</span>
+
+<span class="comment"># Grabar en el ESP8266</span>
+<span class="command">esptool --port /dev/ttyUSB0 --chip esp8266 write-flash --flash_mode dio --flash_size 4MB 0x0 ESP8266_GENERIC-20240602-v1.23.0.bin</span></code></pre>
+        </section>
+
+        <section class="animate" style="animation-delay: 0.3s;">
+            <h2>3. Lógica del Dispositivo</h2>
+            <p>El ESP8266 requiere dos archivos principales: <code class="keyword">boot.py</code> para la configuración de red y <code class="keyword">main.py</code> para el servidor web.</p>
+            
+            <h3>Red (boot.py)</h3>
+            <pre><code><span class="keyword">import</span> network
+<span class="keyword">import</span> gc
+
+ap = network.WLAN(network.AP_IF)
+ap.active(<span class="keyword">True</span>)
+ap.config(essid=<span class="string">'Robotica-ESP'</span>, password=<span class="string">'password123'</span>)
+
+print(<span class="string">'Red AP Activa. IP:'</span>, ap.ifconfig()[0])
+gc.collect()</code></pre>
+
+            <h3>Servidor Web (main.py)</h3>
+            <pre><code><span class="keyword">import</span> machine
+<span class="keyword">import</span> usocket <span class="keyword">as</span> socket
+
+led = machine.Pin(2, machine.Pin.OUT)
+led.value(1) <span class="comment"># Apagado (lógica inversa)</span>
+
+<span class="keyword">def</span> <span class="keyword">web_page</span>():
+    <span class="keyword">return</span> <span class="string">"""&lt;!DOCTYPE html&gt;&lt;html&gt;...&lt;/html&gt;"""</span>
+
+s = socket.socket()
+s.bind((<span class="string">''</span>, 80))
+s.listen(5)
+
+<span class="keyword">while</span> <span class="keyword">True</span>:
+    conn, addr = s.accept()
+    request = conn.recv(1024).decode(<span class="string">'utf-8'</span>)
+    <span class="keyword">if</span> <span class="string">'/toggle'</span> <span class="keyword">in</span> request:
+        led.value(<span class="keyword">not</span> led.value()) 
+    <span class="comment"># ... enviar respuesta ...</span></code></pre>
+        </section>
+
+        <section class="animate" style="animation-delay: 0.4s;">
+            <h2>4. Despliegue y Pruebas</h2>
+            <p>Subimos los archivos y reiniciamos la placa para activar el servidor.</p>
+            <pre><code><span class="command">mpremote cp boot.py :</span>
+<span class="command">mpremote cp main.py :</span>
+<span class="command">mpremote reset</span></code></pre>
+            
+            <ul class="step-list">
+                <li class="step-item">Conéctate a la red Wi-Fi <strong>Robotica-ESP</strong>.</li>
+                <li class="step-item">Usa la clave <strong>password123</strong>.</li>
+                <li class="step-item">Navega a <strong>192.168.4.1</strong> y acciona el LED.</li>
+            </ul>
+        </section>
+
+        <footer>
+            <p>&copy; 2026 Programación II & Robótica - UTN Gesell</p>
+        </footer>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
